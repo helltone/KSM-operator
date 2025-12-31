@@ -1,9 +1,18 @@
+# Binaries for programs and plugins
 bin/
+build/
+dist/
 *.exe
 *.exe~
 *.dll
 *.so
 *.dylib
+
+# Built binaries
+manager
+ksm-scale-operator
+controller-gen
+kustomize
 
 *.test
 *.out
@@ -25,3 +34,7 @@ coverage.html
 *.test
 
 __debug_bin
+
+# Ignore all markdown files except README.md
+*.md
+!README.md
