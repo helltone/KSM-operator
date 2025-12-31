@@ -1,0 +1,99 @@
+#apiVersion: monitor.example.com/v1alpha1
+#kind: KSMScale
+#metadata:
+#  name: medium-cluster-sharded
+#spec:
+#  # Container image for kube-state-metrics
+#  monitorImage: "registry.k8s.io/kube-state-metrics/kube-state-metrics:v2.10.1"
+#  
+#  # Deploy to monitoring namespace 
+#  namespace: monitoring
+#  
+#  # Base scaling configuration (used for calculating desired pod count)
+#  nodesPerMonitor: 15  # 75 nodes = 5 pods, distributed across shards
+#  
+#  # Sharding configuration with dynamic replicas
+#  sharding:
+#    enabled: true
+#    shardCount: 3           # Fixed 3 shards for data distribution
+#    minReplicasPerShard: 1  # Minimum 1 pod per shard (3 minimum total)
+#    maxReplicasPerShard: 4  # Maximum 4 pods per shard (12 maximum total)
+#    
+#    # Pod distribution configuration
+#    distribution:
+#      spreadAcrossNodes: true   # Use anti-affinity to spread pods
+#      enablePDB: true          # Create PodDisruptionBudget
+#      maxUnavailable: 1        # Allow max 1 shard down at a time
+#  
+#  # Resource requirements for each pod
+#  resources:
+#    requests:
+#      cpu: "100m"
+#      memory: "150Mi"
+#    limits:
+#      cpu: "300m"
+#      memory: "512Mi"
+#
+#---
+## Example with sharding for large cluster
+#apiVersion: monitor.example.com/v1alpha1
+#kind: KSMScale
+#metadata:
+#  name: large-cluster-sharded
+#spec:
+#  monitorImage: "registry.k8s.io/kube-state-metrics/kube-state-metrics:v2.10.1"
+#  namespace: monitoring
+#  
+#  # For large clusters (300 nodes = 20 pods)
+#  nodesPerMonitor: 15
+#  
+#  sharding:
+#    enabled: true
+#    shardCount: 5           # 5 shards for better distribution
+#    minReplicasPerShard: 1  # Minimum 5 pods total
+#    # No maxReplicasPerShard limit for large clusters
+#    
+#    distribution:
+#      spreadAcrossNodes: true
+#      enablePDB: true
+#      maxUnavailable: 2     # Allow 2 shards down for large deployments
+#  
+#  resources:
+#    requests:
+#      cpu: "200m"
+#      memory: "256Mi"
+#    limits:
+#      cpu: "500m"
+#      memory: "1Gi"
+
+---
+# Example with conservative sharding for small-medium cluster
+apiVersion: monitor.example.com/v1alpha1
+kind: KSMScale
+metadata:
+  name: small-cluster-sharded
+spec:
+  monitorImage: "registry.k8s.io/kube-state-metrics/kube-state-metrics:v2.10.1"
+  namespace: monitoring
+  
+  # For small clusters (30 nodes normally = 2 pods)
+  nodesPerMonitor: 15
+  
+  sharding:
+    enabled: true
+    shardCount: 3           # Only 2 shards for small cluster
+    minReplicasPerShard: 2  # Minimum 2 pods total
+    maxReplicasPerShard: 3  # Cap at 6 pods total for cost control
+    
+    distribution:
+      spreadAcrossNodes: true
+      enablePDB: true
+      maxUnavailable: 1
+  
+  resources:
+    requests:
+      cpu: "100m"
+      memory: "128Mi"
+    limits:
+      cpu: "200m"
+      memory: "384Mi"

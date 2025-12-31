@@ -1,0 +1,22 @@
+apiVersion: monitor.example.com/v1alpha1
+kind: KSMScale
+metadata:
+  name: dev-ksm
+spec:
+  # Scale aggressively for testing (1 pod per 9 nodes)
+  nodesPerMonitor: 9
+  
+  # Use the standard kube-state-metrics image for development  
+  monitorImage: "registry.k8s.io/kube-state-metrics/kube-state-metrics:v2.10.1"
+  
+  # Deploy to monitoring namespace for development isolation
+  namespace: monitoring
+  
+  # Minimal resources for development
+  resources:
+    requests:
+      cpu: "10m"
+      memory: "32Mi"
+    limits:
+      cpu: "50m"
+      memory: "64Mi"

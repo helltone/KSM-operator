@@ -1,0 +1,17 @@
+# This file extends the base RBAC with production-specific configurations
+# The ClusterRole is shared from config/rbac/kube_state_metrics_rbac.yaml
+# This binding ensures the production service account in the correct namespace is used
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: kube-state-metrics-production
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: kube-state-metrics
+subjects:
+- kind: ServiceAccount
+  name: kube-state-metrics
+  # Update this namespace if deploying to a different namespace in production
+  namespace: monitoring

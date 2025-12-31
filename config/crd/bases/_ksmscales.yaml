@@ -1,0 +1,203 @@
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.20.0
+  name: ksmscales.
+spec:
+  group: ""
+  names:
+    kind: KSMScale
+    listKind: KSMScaleList
+    plural: ksmscales
+    singular: ksmscale
+  scope: Cluster
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .status.nodeCount
+      name: Nodes
+      type: integer
+    - jsonPath: .status.desiredReplicas
+      name: Desired
+      type: integer
+    - jsonPath: .status.currentReplicas
+      name: Current
+      type: integer
+    - jsonPath: .status.phase
+      name: Phase
+      type: string
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    name: ""
+    schema:
+      openAPIV3Schema:
+        properties:
+          apiVersion:
+            description: |-
+              APIVersion defines the versioned schema of this representation of an object.
+              Servers should convert recognized schemas to the latest internal value, and
+              may reject unrecognized values.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+            type: string
+          kind:
+            description: |-
+              Kind is a string value representing the REST resource this object represents.
+              Servers may infer this from the endpoint the client submits requests to.
+              Cannot be updated.
+              In CamelCase.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+            type: string
+          metadata:
+            type: object
+          spec:
+            properties:
+              monitorImage:
+                default: registry.k8s.io/kube-state-metrics/kube-state-metrics:v2.10.1
+                description: Container image for kube-state-metrics
+                type: string
+              namespace:
+                default: monitoring
+                description: Target namespace for kube-state-metrics pods
+                type: string
+              nodesPerMonitor:
+                default: 15
+                description: Number of nodes per kube-state-metrics pod
+                format: int32
+                minimum: 9
+                type: integer
+              resources:
+                description: Resource requirements for kube-state-metrics pods
+                properties:
+                  limits:
+                    properties:
+                      cpu:
+                        type: string
+                      memory:
+                        type: string
+                    type: object
+                  requests:
+                    properties:
+                      cpu:
+                        type: string
+                      memory:
+                        type: string
+                    type: object
+                type: object
+              sharding:
+                description: Sharding configuration for distributing metrics collection
+                properties:
+                  distribution:
+                    description: Distribution configuration for pod placement
+                    properties:
+                      enablePDB:
+                        default: true
+                        description: Enable pod disruption budget
+                        type: boolean
+                      maxUnavailable:
+                        default: 1
+                        description: Maximum unavailable shards during disruption
+                        format: int32
+                        type: integer
+                      spreadAcrossNodes:
+                        default: true
+                        description: Spread shards across nodes
+                        type: boolean
+                    type: object
+                  enabled:
+                    default: false
+                    description: Enable sharding mode
+                    type: boolean
+                  maxReplicasPerShard:
+                    default: 0
+                    description: Maximum replicas per shard (0 = unlimited)
+                    format: int32
+                    type: integer
+                  minReplicasPerShard:
+                    default: 1
+                    description: |-
+                      Minimum replicas per shard (defaults to 1)
+                      Total minimum pods = ShardCount * MinReplicasPerShard
+                    format: int32
+                    minimum: 1
+                    type: integer
+                  shardCount:
+                    default: 3
+                    description: Fixed number of shards (data partitions)
+                    format: int32
+                    maximum: 10
+                    minimum: 2
+                    type: integer
+                required:
+                - enabled
+                - shardCount
+                type: object
+            type: object
+          status:
+            properties:
+              currentReplicas:
+                format: int32
+                type: integer
+              desiredReplicas:
+                format: int32
+                type: integer
+              lastUpdated:
+                format: date-time
+                type: string
+              nodeCount:
+                format: int32
+                type: integer
+              phase:
+                type: string
+              shardingStatus:
+                description: Sharding status when sharding is enabled
+                properties:
+                  activeShards:
+                    description: Number of active shards (shards with at least one
+                      ready pod)
+                    format: int32
+                    type: integer
+                  shardDistribution:
+                    additionalProperties:
+                      description: ShardReplicas describes the replicas for a specific
+                        shard
+                      properties:
+                        pods:
+                          description: Names of pods serving this shard
+                          items:
+                            type: string
+                          type: array
+                        ready:
+                          description: Number of ready replicas for this shard
+                          format: int32
+                          type: integer
+                        replicas:
+                          description: Number of total replicas for this shard
+                          format: int32
+                          type: integer
+                      required:
+                      - ready
+                      - replicas
+                      type: object
+                    description: |-
+                      Distribution of pods across shards
+                      Map key is shard ID (0, 1, 2, etc.)
+                    type: object
+                  totalShards:
+                    description: Total number of configured shards
+                    format: int32
+                    type: integer
+                  warning:
+                    description: Warning message if sharding configuration seems suboptimal
+                    type: string
+                required:
+                - activeShards
+                - totalShards
+                type: object
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}

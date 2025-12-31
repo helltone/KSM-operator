@@ -1,0 +1,26 @@
+apiVersion: monitor.example.com/v1alpha1
+kind: KSMScale
+metadata:
+  name: production-ksm-dynamic
+spec:
+  # Scale one kube-state-metrics pod per 15 nodes (dynamic scaling, non-sharded)
+  nodesPerMonitor: 15
+  
+  # Official kube-state-metrics image
+  monitorImage: "registry.k8s.io/kube-state-metrics/kube-state-metrics:v2.10.1"
+  
+  # Deploy to monitoring namespace (can be changed to kube-system if preferred)
+  namespace: monitoring
+  
+  # No sharding configuration = dynamic scaling mode
+  # This is suitable for small to medium clusters (<60 nodes)
+  # For larger clusters, consider using sharded mode (see sample-ksmscale-sharded.yaml)
+  
+  # Resource requirements for production workload
+  resources:
+    requests:
+      cpu: "100m"
+      memory: "190Mi"
+    limits:
+      cpu: "200m"
+      memory: "384Mi"

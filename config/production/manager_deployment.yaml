@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ksm-scale-operator
+  namespace: monitoring
+  labels:
+    app: ksm-scale-operator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ksm-scale-operator
+  template:
+    metadata:
+      labels:
+        app: ksm-scale-operator
+    spec:
+      serviceAccountName: ksm-scale-operator
+      containers:
+      - name: manager
+        # Replace with your production image repository
+        image: YOUR_ECR_REPO/ksm-scale-operator:latest
+        imagePullPolicy: Always
+        resources:
+          requests:
+            cpu: 100m
+            memory: 64Mi
+          limits:
+            cpu: 500m
+            memory: 256Mi
+        env:
+        - name: WATCH_NAMESPACE
+          value: ""
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+          runAsUser: 65532
+          capabilities:
+            drop:
+            - ALL
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 8081
+          initialDelaySeconds: 15
+          periodSeconds: 20
+        readinessProbe:
+          httpGet:
+            path: /readyz
+            port: 8081
+          initialDelaySeconds: 5
+          periodSeconds: 10
+      # Node selector for production workloads
+      nodeSelector:
+        node.kubernetes.io/purpose: system
+      # Tolerations for system nodes if needed
+      tolerations:
+      - key: node.kubernetes.io/purpose
+        operator: Equal
+        value: system
+        effect: NoSchedule
